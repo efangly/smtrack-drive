@@ -10,7 +10,7 @@ jobs:
 
     runs-on: ubuntu-latest
     env:
-      IMAGE_NAME: siamatic/smtrack-upload-service:1.1.0
+      IMAGE_NAME: siamatic/smtrack-upload-service:1.1.1
     steps:
     - uses: actions/checkout@v4
     - name: Login to docker hub
@@ -32,6 +32,17 @@ jobs:
         git add k8s/deploy.yaml
         git commit -m "${{ env.IMAGE_NAME }}"
         git push
+    - name: Send ArgoCD webhook
+      run: |
+        curl -X POST \
+          -H "Content-Type: application/json" \
+          -H "X-GitHub-Event: push" \
+          -d '{
+            "repository": {
+              "url": "https://github.com/efangly/smtrack-drive.git"
+            }
+          }' \
+          https://argocd.siamatic.dev/api/webhook
     - name: Send success message to slack
       id: slack
       uses: slackapi/slack-github-action@v1.27.0

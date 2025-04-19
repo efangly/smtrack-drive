@@ -9,7 +9,10 @@ async function bootstrap() {
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));
   app.enableCors({ origin: '*' });
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), { prefix: '/media' });
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), { 
+    prefix: '/media',
+    setHeaders: (res) => res.set('Cache-Control', 'public, max-age=86400')
+  });
   await app.listen(3000);
 }
 bootstrap();
