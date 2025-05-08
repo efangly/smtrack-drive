@@ -8,6 +8,7 @@ import { AppService } from './app.service';
 @Controller('api')
 export class AppController {
   constructor(private readonly appService: AppService) {}
+
   @Post('drive')
   @UseInterceptors(
     FileInterceptor('file', {
@@ -25,6 +26,25 @@ export class AppController {
   )
   uploadFirmware(@UploadedFile() file: Express.Multer.File) {
     return { message: 'File uploaded successfully', path: `/media/firmwares/${file.filename}` }
+  }
+
+  @Post('csv')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: async (req, file, callback) => {
+          const uploadPath = join('uploads', 'csv');
+          if (!existsSync(uploadPath)) mkdirSync(uploadPath, { recursive: true });
+          callback(null, uploadPath);
+        },
+        filename: (req, file, callback) => {
+          callback(null, file.originalname);
+        },
+      })
+    }),
+  )
+  uploadCsv(@UploadedFile() file: Express.Multer.File) {
+    return { message: 'File uploaded successfully', path: `/media/csv/${file.filename}` }
   }
 
   @Post('image/user')
@@ -113,6 +133,11 @@ export class AppController {
     return this.appService.firmwareList();
   }
 
+  @Get('csv')
+  csvList() {
+    return this.appService.csvList();
+  }
+
   @Get('image/user')
   userList() {
     return this.appService.userList();
@@ -146,5 +171,10 @@ export class AppController {
   @Delete('image/device/:filename')
   deleteDevice(@Param('filename') filename: string) {
     return this.appService.deleteFile('device', filename);
+  }
+
+  @Delete('csv/:filename')
+  deleteCsv(@Param('filename') filename: string) {
+    return this.appService.deleteFile('csv', filename);
   }
 }

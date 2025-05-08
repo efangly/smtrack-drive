@@ -7,7 +7,29 @@ import { join } from "node:path";
 export class AppService {
   private readonly logger = new Logger(AppService.name);
 
-  async firmwareList() {
+  csvList() {
+    try {
+      const directoryPath = join('uploads', 'csv');
+      if (!existsSync(directoryPath)) mkdirSync(directoryPath, { recursive: true });
+      const filesAndFolders = readdirSync(directoryPath);
+      const file = filesAndFolders.filter((item) => item !== ".DS_Store").map((item) => {
+        const itemPath = join(directoryPath, item);
+        const stats = statSync(itemPath);
+        return {
+          fileName: item,
+          filePath: `/media/csv/${item}`,
+          fileSize: `${(stats.size * 0.000001).toFixed(2)}MB`,
+          createDate: format(stats.birthtime, "yyyy-MM-dd' 'HH:mm:ss")
+        };
+      });
+      return { data: file };
+    } catch (err: any) {
+      this.logger.error(err.message);
+      return { error: err.message };
+    }
+  }
+
+  firmwareList() {
     try {
       const directoryPath = join('uploads', 'firmwares');
       if (!existsSync(directoryPath)) mkdirSync(directoryPath, { recursive: true });
@@ -109,6 +131,9 @@ export class AppService {
         break;
       case 'device':
         filePath = join('uploads', 'image', 'devices', fileName);
+        break;
+      case 'csv':
+        filePath = join('uploads', 'csv', fileName);
         break;
       default:
         throw new NotFoundException('File not found');
